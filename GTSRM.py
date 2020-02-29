@@ -30,7 +30,7 @@ class Data_Set_Loader():
         self.tf_sess = tf.Session()
         self.load_data(training_path, testing_path)
         self.x_train_set = self.preprocess(self.x_train_set)
-        # self.batch_iterator(self.x_train_set, self.y_train_set)
+        self.batch_iterator(self.x_train_set, self.y_train_set)
 
     # Loads x_train, x_test, y_train, y_test into the class variables.
     def load_data(self, training_path, testing_path):
@@ -115,16 +115,16 @@ class Data_Set_Loader():
 
     # Iterates through the batch to make repeat the signs, shuffle them, and select batches.
     def batch_iterator(self, features, labels):
-        x_set = tf.data.Dataset.from_tensor_slices(features)
-        y_set = tf.data.Dataset.from_tensor_slices(labels)
+        # x_set = tf.data.Dataset.from_tensor_slices(features)
+        # y_set = tf.data.Dataset.from_tensor_slices(labels)
         data = tf.data.Dataset.zip((x_set, y_set)).batch(2)
 
-        # data = data.repeat(self.repeat_size)
-        # data = data.shuffle(self.shuffle)
-        # data = data.batch(self.batch_size)
-        # iterator = tf.Data.Iterator.from_structure(data.output_types, data.output_shapes)
-        # train_init = iterator.make_initializer(data)
-        # self.X_batch, self.Y_batch = iterator.get_next()
+        data = data.repeat(self.repeat_size)
+        data = data.shuffle(self.shuffle)
+        data = data.batch(self.batch_size)
+        iterator = tf.Data.Iterator.from_structure(data.output_types, data.output_shapes)
+        train_init = iterator.make_initializer(data)
+        self.X_batch, self.Y_batch = iterator.get_next()
 
 
 
