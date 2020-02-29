@@ -20,9 +20,9 @@ class Data_Set_Loader():
 
     tf_sess = None
 
-    batch_size = 512 # Combines the number of elements into 1 batch     https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch
-    repeat_size = 5 # How many times each value is seen                 https://www.tensorflow.org/api_docs/python/tf/data/Dataset#repeat
-    shuffle = 42 # randomly selects the number of buffer_size element   https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
+    batch_size = 512  # Combines the number of elements into 1 batch     https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch
+    repeat_size = 5  # How many times each value is seen                 https://www.tensorflow.org/api_docs/python/tf/data/Dataset#repeat
+    shuffle = 42  # randomly selects the number of buffer_size element   https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
 
     def __init__(self, training_path, testing_path):
 
@@ -30,7 +30,7 @@ class Data_Set_Loader():
         self.tf_sess = tf.Session()
         self.load_data(training_path, testing_path)
         self.x_train_set = self.preprocess(self.x_train_set)
-        self.batch_iterator(self.x_train_set, self.y_train_set)
+        # self.batch_iterator(self.x_train_set, self.y_train_set)
 
     # Loads x_train, x_test, y_train, y_test into the class variables.
     def load_data(self, training_path, testing_path):
@@ -115,8 +115,8 @@ class Data_Set_Loader():
 
     # Iterates through the batch to make repeat the signs, shuffle them, and select batches.
     def batch_iterator(self, features, labels):
-        # x_set = tf.data.Dataset.from_tensor_slices(features)
-        # y_set = tf.data.Dataset.from_tensor_slices(labels)
+        x_set = tf.data.Dataset.from_tensor_slices(features)
+        y_set = tf.data.Dataset.from_tensor_slices(labels)
         data = tf.data.Dataset.zip((x_set, y_set)).batch(2)
 
         data = data.repeat(self.repeat_size)
@@ -127,10 +127,10 @@ class Data_Set_Loader():
         self.X_batch, self.Y_batch = iterator.get_next()
 
 
-
 if __name__ == "__main__":
 
-    loader = Data_Set_Loader(training_path='./Training', testing_path='./Testing')
+    loader = Data_Set_Loader(training_path='./Training',
+                             testing_path='./Testing')
 
     n_train = len(loader.x_train_set)
     n_test = len(loader.x_test_set)
