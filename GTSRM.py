@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 import csv
 import os
+from PIL import Image
 
 
 class Data_Set_Loader():
@@ -20,9 +21,9 @@ class Data_Set_Loader():
 
     tf_sess = None
 
-    batch_size = 512  # Combines the number of elements into 1 batch     https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch
-    repeat_size = 5  # How many times each value is seen                 https://www.tensorflow.org/api_docs/python/tf/data/Dataset#repeat
-    shuffle = 42  # randomly selects the number of buffer_size element   https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
+    batch_size = 512    # Combines the number of elements into 1 batch          https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch
+    repeat_size = 5     # How many times each value is seen                     https://www.tensorflow.org/api_docs/python/tf/data/Dataset#repeat
+    shuffle = 42        # randomly selects the number of buffer_size element    https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
 
     def __init__(self, training_path, testing_path):
 
@@ -40,31 +41,33 @@ class Data_Set_Loader():
         image_name = {}
         full_path = ''
 
-        for path, subdirs, files in os.walk(training_path):
-            for name in files:
-                if ".ppm" in name:
-                    full_path = os.path.join(path, name)
-                    image_name[full_path] = image_counter
-                    counter += 1
-                    image_counter += 1
-                    image = cv2.imread(full_path, flags=cv2.IMREAD_COLOR)
-                    self.x_train_set.append(image)
+        # for path, subdirs, files in os.walk(training_path):
+        #     for name in files:
+        #         if ".ppm" in name:
+        #             full_path = os.path.join(path, name)
+        #             image_name[full_path] = image_counter
+        #             counter += 1
+        #             image_counter += 1
+        #             image = cv2.imread(full_path, flags=cv2.IMREAD_COLOR)
+        #             self.x_train_set.append(image)
 
-        for path, subdirs, files in os.walk(training_path):
-            for name in files:
-                if '.csv' in name:
-                    with open(os.path.join(path, name)) as csv_file:
-                        csv_reader = csv.reader(csv_file, delimiter=";")
-                        row_count = 0
-                        for row in csv_reader:
-                            if(row_count > 0):
-                                full_path_row = os.path.join(path, row[0])
-                                self.y_train_set.append(row[7])
-                            row_count += 1
+        # for path, subdirs, files in os.walk(training_path):
+        #     for name in files:
+        #         if '.csv' in name:
+        #             with open(os.path.join(path, name)) as csv_file:
+        #                 csv_reader = csv.reader(csv_file, delimiter=";")
+        #                 row_count = 0
+        #                 for row in csv_reader:
+        #                     if(row_count > 0):
+        #                         full_path_row = os.path.join(path, row[0])
+        #                         self.y_train_set.append(row[7])
+        #                     row_count += 1
+
+        self.x_train_set, self.y_train_set = self.readTrafficSigns(training_path)
 
         # print("Num Training Images:", counter)
-        # print("X_Train_set:", len(self.x_train_set))
-        # print("Y_Train_Set:", len(self.y_train_set))
+        print("X_Train_set:", len(self.x_train_set))
+        print("Y_Train_Set:", len(self.y_train_set))
 
         counter = 0
 
@@ -125,6 +128,36 @@ class Data_Set_Loader():
         iterator = tf.Data.Iterator.from_structure(data.output_types, data.output_shapes)
         train_init = iterator.make_initializer(data)
         self.X_batch, self.Y_batch = iterator.get_next()
+
+    # function for reading the images
+    # arguments: path to the traffic sign data, for example './GTSRB/Training'
+    # returns: list of images, list of corresponding labels
+    def readTrafficSigns(self, rootpath):
+        '''Reads traffic sign data for German Traffic Sign Recognition Benchmark.
+
+        Arguments: path to the traffic sign data, for example './GTSRB/Training'
+        Returns:   list of images, list of corresponding labels'''
+        images = []  # images
+        labels = []  # corresponding labels
+        # loop over all 42 classes
+        for c in range(0, 43):
+            # subdirectory for class
+            prefix = rootpath + '/' + format(c, '05d') + '/'
+            gtFile = open(prefix + 'GT-' + format(c, '05d') +
+                          '.csv')  # annotations file
+            # csv parser for annotations file
+            gtReader = csv.reader(gtFile, delimiter=';')
+            next(gtReader)  # skip header
+            # loop over all images in current annotations file
+            for row in gtReader:
+                # the 1th column is the filename
+                images.append(plt.imread(prefix + row[0]))
+                labels.append(row[7])  # the 8th column is the label
+            gtFile.close()
+
+        # self.x_train_set = images
+        # self.y_train_set = labels
+        return images, labels
 
 
 if __name__ == "__main__":
