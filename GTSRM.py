@@ -81,17 +81,17 @@ class Data_Set_Loader():
                     image = cv2.imread(full_path, flags=cv2.IMREAD_COLOR)
                     self.x_test_set.append(image)
 
-        # for path, subdirs, files in os.walk(testing_path):
-        #     for name in files:
-        #         if '.csv' in name:
-        #             with open(os.path.join(path, name)) as csv_file:
-        #                 csv_reader = csv.reader(csv_file, delimiter=";")
-        #                 row_count = 0
-        #                 for row in csv_reader:
-        #                     if(row_count > 0):
-        #                         full_path_row = os.path.join(path, row[0])
-        #                         self.y_test_set.append(row[7])
-        #                     row_count += 1
+        for path, subdirs, files in os.walk(testing_path):
+            for name in files:
+                if '.csv' in name:
+                    with open(os.path.join(path, name)) as csv_file:
+                        csv_reader = csv.reader(csv_file, delimiter=";")
+                        row_count = 0
+                        for row in csv_reader:
+                            if(row_count > 0):
+                                full_path_row = os.path.join(path, row[0])
+                                self.y_test_set.append(row[7])
+                            row_count += 1
 
         # print("\nNum Training Images:", counter)
         # print("X_Test_set:", len(self.x_test_set))
