@@ -7,6 +7,7 @@ import csv
 import os
 from PIL import Image
 import random
+from readTrafficSigns import readTrafficSigns 
 
 
 class Data_Set_Loader():
@@ -69,7 +70,7 @@ class Data_Set_Loader():
         #                         self.y_train_set.append(row[7])
         #                     row_count += 1
 
-        self.x_train_set, self.y_train_set = self.readTrafficSigns(training_path)
+        self.x_train_set, self.y_train_set = readTrafficSigns(training_path)
 
         print("Num Training Images:", counter)
         print("X_Train_set:", len(self.x_train_set))
@@ -192,37 +193,6 @@ class Data_Set_Loader():
         # iterator = tf.Data.Iterator.from_structure(data.output_types, data.output_shapes)
         # train_init = iterator.make_initializer(data)
         # self.X_batch, self.Y_batch = iterator.get_next()
-
-    # function for reading the images
-    # arguments: path to the traffic sign data, for example './GTSRB/Training'
-    # returns: list of images, list of corresponding labels
-    def readTrafficSigns(self, rootpath):
-        '''Reads traffic sign data for German Traffic Sign Recognition Benchmark.
-
-        Arguments: path to the traffic sign data, for example './GTSRB/Training'
-        Returns:   list of images, list of corresponding labels'''
-        images = []  # images
-        labels = []  # corresponding labels
-        # loop over all 42 classes
-        for c in range(0, 43):
-            # subdirectory for class
-            prefix = rootpath + '/' + format(c, '05d') + '/'
-            gtFile = open(prefix + 'GT-' + format(c, '05d') +
-                          '.csv')  # annotations file
-            # csv parser for annotations file
-            gtReader = csv.reader(gtFile, delimiter=';')
-            next(gtReader)  # skip header
-            # loop over all images in current annotations file
-            for row in gtReader:
-                # the 1th column is the filename
-                images.append(plt.imread(prefix + row[0]))
-                labels.append(row[7])  # the 8th column is the label
-            gtFile.close()
-
-        # self.x_train_set = images
-        # self.y_train_set = labels
-        return images, labels
-
 
 if __name__ == "__main__":
 
