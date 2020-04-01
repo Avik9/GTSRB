@@ -7,7 +7,8 @@ import csv
 import os
 from PIL import Image
 import random
-from readTrafficSigns import readTrafficSigns 
+from readTrafficSigns import readTrafficSigns
+from CNN_Classifier import CNN
 
 
 class Data_Set_Loader():
@@ -25,6 +26,8 @@ class Data_Set_Loader():
     Y_batch_returned = []
 
     epochs = 150
+    shape = None
+    num_classes = None
 
     batch_test_counter = 0
     all_positions = []
@@ -54,6 +57,8 @@ class Data_Set_Loader():
         full_path = ''
 
         self.x_train_set, self.y_train_set = readTrafficSigns(training_path)
+        self.shape = list(self.x_train_set[0].shape)
+        self.num_classes = len(np.unique(self.y_train_set))
 
         # print("Num Training Images:", counter)
         # print("X_Train_set:", len(self.x_train_set))
@@ -70,6 +75,8 @@ class Data_Set_Loader():
                     image_counter += 1
                     image = cv2.imread(full_path, flags=cv2.IMREAD_COLOR)
                     self.x_test_set.append(image)
+                    # print("Image shape:", image.shape)
+
 
         for path, subdirs, files in os.walk(testing_path):
             for name in files:
@@ -148,18 +155,6 @@ class Data_Set_Loader():
         # print("Total images generated:", (images_repeated + images_created), "| Num repeated:", images_repeated, " | Num repeated in total", repeated_total)
         # print()
 
-    def histogramEqualization(self, image):
-
-        R, G, B = cv2.split(image.astype(np.uint8))
-
-        img_r = cv2.equalizeHist(R)
-        img_g = cv2.equalizeHist(G)
-        img_b = cv2.equalizeHist(B)
-
-        image = cv2.merge((img_r, img_g, img_b))
-
-        return image.astype(np.float32)
-
     def translateImage(self, image, height=32, width=32, max_trans=5):
         translate_x = max_trans * np.random.uniform() - max_trans / 2
         translate_y = max_trans * np.random.uniform() - max_trans / 2
@@ -185,7 +180,14 @@ if __name__ == "__main__":
     print("Number of classes =", n_classes)
 
     imageToTest = loader.x_train_set[345]
-    loader.display_one(imageToTest)
+    print("Image shape:", imageToTest.shape)
+    # loader.display_one(imageToTest)
 
-    imageToTest = loader.histogramEqualization(imageToTest)
-    loader.display_one(imageToTest)
+    # imageToTest = loader.translateImage(imageToTest)
+    # loader.display_one(imageToTest)
+
+    # loader = tf.data.Dataset.from_tensor_slices((loader.x_train_set))
+
+    # tf_sess = tf.Session()
+
+    # cnn = CNN(loader, num_epochs=10)
