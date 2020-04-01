@@ -148,6 +148,29 @@ class Data_Set_Loader():
         # print("Total images generated:", (images_repeated + images_created), "| Num repeated:", images_repeated, " | Num repeated in total", repeated_total)
         # print()
 
+    def histogramEqualization(self, image):
+
+        R, G, B = cv2.split(image.astype(np.uint8))
+
+        img_r = cv2.equalizeHist(R)
+        img_g = cv2.equalizeHist(G)
+        img_b = cv2.equalizeHist(B)
+
+        image = cv2.merge((img_r, img_g, img_b))
+
+        return image.astype(np.float32)
+
+    def translateImage(self, image, height=32, width=32, max_trans=5):
+        translate_x = max_trans * np.random.uniform() - max_trans / 2
+        translate_y = max_trans * np.random.uniform() - max_trans / 2
+        translation_mat = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
+        trans = cv2.warpAffine(image, translation_mat, (height, width))
+
+        return trans
+
+    def gaussianNoise(self, image, ksize=(11,11), border=0):
+        return cv2.GaussianBlur(image, ksize, border)
+
 if __name__ == "__main__":
 
     loader = Data_Set_Loader(training_path='./Training',
@@ -160,3 +183,9 @@ if __name__ == "__main__":
     print("Number of training examples =", n_train)
     print("Number of testing examples =", n_test)
     print("Number of classes =", n_classes)
+
+    imageToTest = loader.x_train_set[345]
+    loader.display_one(imageToTest)
+
+    imageToTest = loader.histogramEqualization(imageToTest)
+    loader.display_one(imageToTest)
