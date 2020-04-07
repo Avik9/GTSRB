@@ -6,6 +6,10 @@ from Data_Set_Loader import Data_Set_Loader
 from datetime import datetime
 from tqdm import tqdm
 
+'''
+Based on LeNet Architecture 
+'''
+
 class CNN_classifier():
 
     tf_sess = None
@@ -62,19 +66,37 @@ class CNN_classifier():
         pool_1 = tf.nn.max_pool(conv_layer_1, [1, 2, 2, 1], [1, 2, 2, 1], 'VALID')
         print("shape after 1st pooling", pool_1.shape)
 
+        # Second Convolutional Layer
+        num_filters = 16
+        num_channels = 6
+        filter_sz = 5
+        conv_layer_2 = self.create_convulational_layer(pool_1, num_channels, num_filters, filter_sz)
+        print("shape after 2st layer", conv_layer_2.shape)
+
+        # second pooling
+        pool_2 = tf.nn.max_pool(conv_layer_2, [1, 2, 2, 1], [1, 2, 2, 1], 'VALID')
+        print("shape after 2nd pooling", pool_2.shape)
+
+
         # flattened layer
-        current_shape = pool_1.get_shape()
+        current_shape = pool_2.get_shape()
         features = current_shape[1:4].num_elements()
-        flattened_layer = tf.reshape(pool_1, [-1, features])
-        print("shape after 1st pooling", flattened_layer.shape)
+        flattened_layer = tf.reshape(pool_2, [-1, features])
+        print("shape after 2nd pooling", flattened_layer.shape)
 
         # Fully connected layer
-        fc_layer_1_input = 1176
-        fc_layer_1_output = 500
+        fc_layer_1_input = 400
+        fc_layer_1_output = 120
         fc_layer_1 = self.new_fc_layer(flattened_layer, fc_layer_1_input, fc_layer_1_output, use_relu=True)
         print("Shape of After 1st FC:", fc_layer_1.shape)
 
-        logits = self.new_fc_layer(fc_layer_1, 500, 43, use_relu=False)
+        # Fully connected layer 2
+        fc_layer_2_input = 120
+        fc_layer_2_output = 84
+        fc_layer_2 = self.new_fc_layer(fc_layer_1, fc_layer_2_input, fc_layer_2_output, use_relu=True)
+        print("Shape of After 2nd FC:", fc_layer_2.shape)
+
+        logits = self.new_fc_layer(fc_layer_2, 84, 43, use_relu=False)
         print("Shape after logits:", logits.shape)
 
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=tf.one_hot(self.y, num_classes))
@@ -85,9 +107,12 @@ class CNN_classifier():
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         self.prediction = tf.argmax(logits, axis=1)
 
-    def train(self, epochs):
+    def train(self, epochs, limit = 5):
         print("Entered train")
         self.tf_sess.run(tf.global_variables_initializer())
+
+        best = 0
+        no_change = 0
 
         for epoch in range(epochs):
             # print(epoch)
@@ -99,10 +124,10 @@ class CNN_classifier():
                     bx, by = self.tf_sess.run([self.dataset.x_batch, self.dataset.y_batch])
                     
                     feed_dict = {
-                        self.x: self.dataset.augment_images(bx).
-                        self.y: by
+                        self.x: self.dataset.augment_images(bx), 
+                        self.y: by 
                     }
-                    
+                                        
                     self.tf_sess.run(self.optimizer, feed_dict=feed_dict)
                     
                     loss, acc = self.tf_sess.run([self.loss, self.accuracy], feed_dict=feed_dict)
@@ -116,6 +141,16 @@ class CNN_classifier():
 
             loss, acc = self.tf_sess.run([self.loss, self.accuracy], feed_dict=feed_dict)
             print(f'epoch {epoch + 1}: loss = {loss:.4f}, training accuracy = {total / len(self.dataset.y_train_set):.4f}')
+
+            if acc > best:
+                best = acc
+            else:
+                # print("Best:", best, "| Acc:", acc)
+                no_change += 1
+
+            if no_change >= limit:
+                print("EARLY STOPPING")
+                break
 
         feed_dict = {
             self.x: self.dataset.x_test_set,
@@ -132,11 +167,11 @@ if __name__ == '__main__':
     print("The length of the training labels(y_train_set) is: ", len(data.y_train_set))
     print("The length of the testing images(x_test_set) is: ", len(data.x_test_set))
     print("The length of the testing labels(y_test_set) is: ", len(data.y_test_set))
-    epochs = 10
+    epochs = 30
     img_shape = data.x_train_set[0].shape
     num_classes = len(np.unique(data.y_train_set))
     start = datetime.now()
-    cnn = CNN_classifier(data, num_epochs=20)
+    cnn = CNN_classifier(data, epochs)
     end = datetime.now()
     print("Time taken to train the model on " + str(epochs) + " epochs is:", str(end - start))
     cnn.tf_sess.close()
