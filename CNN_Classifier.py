@@ -85,9 +85,12 @@ class CNN_classifier():
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         self.prediction = tf.argmax(logits, axis=1)
 
-    def train(self, epochs):
+    def train(self, epochs, limit = 5):
         print("Entered train")
         self.tf_sess.run(tf.global_variables_initializer())
+        
+        best = 0
+        no_change = 0
 
         for epoch in range(epochs):
             # print(epoch)
@@ -99,7 +102,7 @@ class CNN_classifier():
                     bx, by = self.tf_sess.run([self.dataset.x_batch, self.dataset.y_batch])
                     
                     feed_dict = {
-                        self.x: self.dataset.augment_images(bx).
+                        self.x: bx, # self.dataset.augment_images(bx).
                         self.y: by
                     }
                     
@@ -116,6 +119,16 @@ class CNN_classifier():
 
             loss, acc = self.tf_sess.run([self.loss, self.accuracy], feed_dict=feed_dict)
             print(f'epoch {epoch + 1}: loss = {loss:.4f}, training accuracy = {total / len(self.dataset.y_train_set):.4f}')
+            
+            if acc > best:
+                best = acc
+            else:
+                # print("Best:", best, "| Acc:", acc)
+                no_change += 1
+
+            if no_change >= limit:
+                print("EARLY STOPPING")
+                break
 
         feed_dict = {
             self.x: self.dataset.x_test_set,
@@ -123,6 +136,8 @@ class CNN_classifier():
         }
         acc = self.tf_sess.run(self.accuracy, feed_dict=feed_dict)
         print(f'test accuracy = {acc:.4f}')
+
+        
 
 
 if __name__ == '__main__':

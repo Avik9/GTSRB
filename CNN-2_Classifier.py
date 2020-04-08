@@ -124,7 +124,7 @@ class CNN_classifier():
                     bx, by = self.tf_sess.run([self.dataset.x_batch, self.dataset.y_batch])
                     
                     feed_dict = {
-                        self.x: self.dataset.augment_images(bx), 
+                        self.x: bx, # self.dataset.augment_images(bx), 
                         self.y: by 
                     }
                                         
