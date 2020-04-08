@@ -1,10 +1,7 @@
 import numpy as np
 import tensorflow as tf
-import os
-import warnings
 from Data_Set_Loader import Data_Set_Loader
 from datetime import datetime
-from tqdm import tqdm
 
 class CNN_classifier():
 
@@ -19,7 +16,7 @@ class CNN_classifier():
         self.train(num_epochs)
 
     def create_convulational_layer(self, input, num_channels, num_filters, filter_sz):
-        weights = tf.Variable(tf.truncated_normal(shape=[filter_sz, filter_sz, num_channels, num_filters]))
+        weights = tf.Variable(tf.random.truncated_normal(shape=[filter_sz, filter_sz, num_channels, num_filters]))
         biases = tf.Variable(tf.zeros([num_filters]))
         return tf.nn.conv2d(input, weights, [1, 1, 1, 1], 'VALID') + biases
 
@@ -44,12 +41,12 @@ class CNN_classifier():
         return layer
 
     def build(self):
-        print("Entered Build")
+        print("BUILDING THE MODEL ...")
         imageShape = [item for t in [img_shape] for item in t]
-        self.x = tf.placeholder(tf.float32, [None] + imageShape)
-        self.y = tf.placeholder(tf.int32, [None])
+        self.x = tf.compat.v1.placeholder(tf.float32, [None] + imageShape)
+        self.y = tf.compat.v1.placeholder(tf.int32, [None])
 
-        print("Input shape", img_shape)
+        # print("Input shape", img_shape)
 
         #First Convolutional Layer
         num_filters = 6
@@ -59,7 +56,7 @@ class CNN_classifier():
         print("shape after 1st layer", conv_layer_1.shape)
 
         # first pooling
-        pool_1 = tf.nn.max_pool(conv_layer_1, [1, 2, 2, 1], [1, 2, 2, 1], 'VALID')
+        pool_1 = tf.nn.max_pool2d(conv_layer_1, [1, 2, 2, 1], [1, 2, 2, 1], 'VALID')
         print("shape after 1st pooling", pool_1.shape)
 
         # flattened layer
@@ -79,15 +76,15 @@ class CNN_classifier():
 
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=tf.one_hot(self.y, num_classes))
         self.loss = tf.reduce_mean(cross_entropy)
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
+        self.optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
 
         correct_prediction = tf.equal(tf.argmax(logits, axis=1), tf.argmax(tf.one_hot(self.y, num_classes), axis=1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         self.prediction = tf.argmax(logits, axis=1)
 
-    def train(self, epochs, limit = 5):
+    def train(self, epochs, limit = 10):
         print("Entered train")
-        self.tf_sess.run(tf.global_variables_initializer())
+        self.tf_sess.run(tf.compat.v1.global_variables_initializer())
         
         best = 0
         no_change = 0
@@ -102,7 +99,7 @@ class CNN_classifier():
                     bx, by = self.tf_sess.run([self.dataset.x_batch, self.dataset.y_batch])
                     
                     feed_dict = {
-                        self.x: bx, # self.dataset.augment_images(bx).
+                        self.x: self.dataset.augment_images(bx),
                         self.y: by
                     }
                     
@@ -118,7 +115,7 @@ class CNN_classifier():
                 pass
 
             loss, acc = self.tf_sess.run([self.loss, self.accuracy], feed_dict=feed_dict)
-            print(f'epoch {epoch + 1}: loss = {loss:.4f}, training accuracy = {total / len(self.dataset.y_train_set):.4f}')
+            print(f'epoch {epoch + 1}: loss = {loss:.4f} | training accuracy = {total / len(self.dataset.y_train_set):.4f}')
             
             if acc > best:
                 best = acc
@@ -135,18 +132,19 @@ class CNN_classifier():
             self.y: self.dataset.y_test_set
         }
         acc = self.tf_sess.run(self.accuracy, feed_dict=feed_dict)
-        print(f'test accuracy = {acc:.4f}')
+        print(f'Test accuracy = {acc:.4f}')
 
         
 
 
 if __name__ == '__main__':
-    warnings.filterwarnings("ignore")
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
     data = Data_Set_Loader("./Training", "./Testing/")
-    print("The length of the training images(x_train_set) is: ", len(data.x_train_set))
-    print("The length of the training labels(y_train_set) is: ", len(data.y_train_set))
-    print("The length of the testing images(x_test_set) is: ", len(data.x_test_set))
-    print("The length of the testing labels(y_test_set) is: ", len(data.y_test_set))
+    # print("The length of the training images(x_train_set) is: ", len(data.x_train_set))
+    # print("The length of the training labels(y_train_set) is: ", len(data.y_train_set))
+    # print("The length of the testing images(x_test_set) is: ", len(data.x_test_set))
+    # print("The length of the testing labels(y_test_set) is: ", len(data.y_test_set))
     epochs = 10
     img_shape = data.x_train_set[0].shape
     num_classes = len(np.unique(data.y_train_set))

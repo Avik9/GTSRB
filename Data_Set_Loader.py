@@ -34,9 +34,9 @@ class Data_Set_Loader():
 
     def __init__(self, training_path, testing_path):
 
-        self.session = tf.Session()
+        self.session = tf.compat.v1.Session()
 
-        print("TensorFlow Version: ", tf.__version__)
+        # print("TensorFlow Version: ", tf.__version__)
         self.load_data("./Training", "./Testing/")
         self.batch_iterator(self.batch_size)
 
@@ -65,7 +65,7 @@ class Data_Set_Loader():
 
         self.x_train_set = np.asarray(images)
         self.y_train_set = labels
-        print("Images:",type(images))
+        # print("Images:",type(images))
 
         # print("\nNum Testing Images:")
         # print("X_Test_set:", len(self.x_train_set))
@@ -74,12 +74,12 @@ class Data_Set_Loader():
         labels = []
         images = []
         count_files = 0
-        prefix = 'Testing/'
+        # prefix = 'Testing/'
         gtFile = open(testing_path + 'GT-final_test.csv')
         gtReader = csv.reader(gtFile, delimiter=';')
         next(gtReader)
         for row in gtReader:
-            im = cv2.imread(prefix + row[0])
+            im = cv2.imread(testing_path + row[0])
             im = cv2.resize(im, dsize=(32, 32), interpolation=cv2.INTER_CUBIC)
             
             # Processes each RGB pixel by dividing its value by 255 and saving it in [0, 1) format.
