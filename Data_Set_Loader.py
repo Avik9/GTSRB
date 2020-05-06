@@ -20,7 +20,7 @@ class Data_Set_Loader():
     x_batch = []
     y_batch = []
 
-    epochs = 15
+    epochs = 10
     shape = None
     num_classes = None
     session = None
@@ -29,8 +29,8 @@ class Data_Set_Loader():
     all_positions = []
     train_init = None
 
-    batch_size = 128    # Combines the number of elements into 1 batch          https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch
-    shuffle = 128       # randomly selects the number of buffer_size element    https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
+    batch_size = 512    # Combines the number of elements into 1 batch          https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch
+    shuffle = 512       # randomly selects the number of buffer_size element    https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
 
     def __init__(self, training_path, testing_path):
 
